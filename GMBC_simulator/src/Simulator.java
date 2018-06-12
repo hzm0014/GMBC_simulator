@@ -4,7 +4,9 @@ import org.graphstream.graph.Graph;
 
 public class Simulator {
 
-	static Graph graph = null;
+	private static Graph graph = null;
+
+	private static float varyingRate = 0.5f;
 
 
 	public static void main(String args[]) throws InterruptedException {
@@ -17,10 +19,10 @@ public class Simulator {
 	    graph.display(false);
 
 	    // time verying test
-	    TimeVaryingGraph tvg = new TimeVaryingGraph(graph);
+	    TimeVaryingGraph tvg = new TimeVaryingGraph(graph, varyingRate);
 	    for(;;) {
 	    		TimeUnit.SECONDS.sleep(1);
-	    		tvg.varying();
+	    		tvg.run();
 	    }
     	}
 }

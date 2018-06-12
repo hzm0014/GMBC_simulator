@@ -54,7 +54,7 @@ public class RandomGeometricGraphGenerator {
 
 		for(int i = 0; i < nodeCount; i++) {
 			// add node
-			Node addedNode = addNode(i + "");
+			Node addedNode = addNode("n" + i + "");
 			// add edge, if distance smaller than radius
 			for (Node n : graph.getEachNode()) {
 				if (n != addedNode && isConnect(addedNode, n, radius)) {
