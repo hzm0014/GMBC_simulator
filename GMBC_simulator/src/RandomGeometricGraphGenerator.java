@@ -11,88 +11,163 @@
 
 import java.util.Random;
 
+import org.graphstream.algorithm.Toolkit;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.graph.implementations.SingleGraph;
 
+/**
+ * RandamGeometricGraphを生成する
+ */
 public class RandomGeometricGraphGenerator {
 	/**
-	 * graph
+	 * 乱数生成器
 	 */
-	static Graph graph = null;
-
-	Random rnd;
-
-	int nodeCount;
-
-	double radius;
-
-	int xRange = 100;
-	int yRange = 100;
+	private Random rnd = new Random();
 
 	/**
-	 * constracta
+	 * 作成するグラフ
 	 */
-	RandomGeometricGraphGenerator(int nodeCount, double radius) {
-		this.nodeCount = nodeCount;
+	private static Graph graph = null;
+
+	/**
+	 * ノード数
+	 */
+	private int nodeNum;
+
+	/**
+	 * ノードが接続する半径距離（閾値）
+	 * 2ノードの座標のユークリウッド距離がradius以下であれば接続する
+	 */
+	private float radius;
+
+	/**
+	 * x軸方向の範囲
+	 */
+	private float xRange;
+
+	/**
+	 * y軸方向の範囲
+	 */
+	private float yRange;
+
+	/**
+	 * ポワソン分布のパラメータ
+	 */
+	private final float e = 0.1f;
+
+	/**
+	 * コンストラクタ
+	 * @param nodeNum ノード数
+	 * @param radius ノードが接続する半径距離（閾値）
+	 */
+	public RandomGeometricGraphGenerator(int nodeNum, float radius, float xRange, float yRange) {
+		this.nodeNum= nodeNum;
 		this.radius = radius;
-
-		rnd = new Random();
-	}
-
-	RandomGeometricGraphGenerator() {
-		this(1000, 5);
+		this.xRange = xRange;
+		this.yRange = yRange;
 	}
 
 	/**
-	 * Generate Random Geometric Graph
-	 * @param arg
-	 * @return
+	 * ノード数のみ指定するコンストラクタ．ポワソン分布によりノードの接続する半径距離（閾値）を算出する
+	 * @param nodeNum ノード数
 	 */
-	Graph generate(String arg) {
-		graph = new SingleGraph("RGG: " + arg);
+	public RandomGeometricGraphGenerator(int nodeNum, float xRange, float yRange) {
+		this(nodeNum, 0.0f, xRange, yRange);
+		double area = xRange * yRange;
+		this.radius = (float) Math.sqrt(((1+e) * Math.log(area)) / (nodeNum / area * Math.PI));
+	}
 
-		for(int i = 0; i < nodeCount; i++) {
-			// add node
-			Node addedNode = addNode("n" + i + "");
-			// add edge, if distance smaller than radius
-			for (Node n : graph.getEachNode()) {
-				if (n != addedNode && isConnect(addedNode, n, radius)) {
-					graph.addEdge(addedNode.getId() + n.getId() + "", addedNode.getId() + "", n.getId() + "");
-				}
+	/**
+	 * ノードの接続する半径距離（閾値）のみ指定するコンストラクタ．ポワソン分布によりノード数を算出する
+	 * @param radius ノードの接続する半径距離（閾値）
+	 */
+	public RandomGeometricGraphGenerator(float radius, float xRange, float yRange) {
+		this(0, radius, xRange, yRange);
+		double area = xRange * yRange;
+		this.nodeNum = (int)(((1+e) * Math.log(area) * area) / (Math.PI * radius * radius));
+	}
+
+	/**
+	 * グラフの範囲を設定する
+	 * @param xRange x軸方向の範囲
+	 * @param yRange y軸方向の範囲
+	 */
+	public void setRange(float xRange, float yRange) {
+		this.xRange = xRange;
+		this.yRange = yRange;
+	}
+
+	/**
+	 * Random Geometric Graphを生成する
+	 * 必ず連結しているグラフを生成するが，limit回思考中に一度も連結しなかった場合はふ連結なグラフを返す
+	 * @param arg グラフ名
+	 * @return 生成したグラフ
+	 */
+	Graph generate(String arg, int limit) {
+		int generateCnt = 0;
+		// グラフを生成
+		do {
+			if(generateCnt > limit) {
+				System.out.println("could not connect in times");
+				break;
 			}
-		}
-
-		/*
-		Generator gen = new RandomEuclideanGenerator();
-	    gen.addSink(graph);
-	    gen.begin();
-	    for(int i=0; i<1000; i++) {
-	            gen.nextEvents();
-	    }
-	    gen.end();
-		*/
+			graph = new SingleGraph("RGG: " + arg);
+			for(int i = 0; i < nodeNum; i++) {
+				// ノードを追加
+				addNode("n" + i + "");
+			}
+			generateCnt++;
+		// 連結していなければ再生成
+		}while(!Toolkit.isConnected(graph));
 
 		return graph;
 	}
 
 	/**
-	 * add node with point x, y in graph
-	 * @param args
-	 * @param x
-	 * @param y
+	 * ノードを追加する
+	 * @param args ノード名
+	 * @param x x座標
+	 * @param y y座標
+	 * @return 追加したノード
 	 */
-	Node addNode(String arg, int x, int y) {
+	void addNode(String arg, int x, int y) {
 		Node node = graph.addNode(arg);
 		node.addAttribute("x", x);
 		node.addAttribute("y", y);
-		return node;
+		// エッジを追加
+		addEdge(node);
 	}
 
-	Node addNode(String arg) {
-		return addNode(arg, rnd.nextInt(100), rnd.nextInt(100));
+	/**
+	 * ランダムな座標にノードを追加する
+	 * @param arg ノード名
+	 * @return 追加したノード
+	 */
+	void addNode(String arg) {
+		addNode(arg, rnd.nextInt((int)xRange), rnd.nextInt((int)yRange));
 	}
 
+	/**
+	 * ノードにエッジを追加する．
+	 * 2ノード間のユークリウッド距離がradius以下であれば接続する
+	 * @param addedNode 追加されたノード
+	 */
+	void addEdge(Node addedNode) {
+		for(Node node : graph.getEachNode()) {
+			if (node != addedNode && isConnect(addedNode, node, radius)) {
+				graph.addEdge(addedNode.getId() + node.getId() + "", addedNode.getId() + "", node.getId() + "");
+			}
+		}
+	}
+
+	/**
+	 * 接続するかどうかを決定する
+	 * @param node0 ノード0
+	 * @param node1 ノード1
+	 * @param r 半径距離（閾値）
+	 * @return 接続するかどうか
+	 */
 	boolean isConnect(Node node0, Node node1, double r) {
 		int x0 = (int) node0.getNumber("x");
 		int y0 = (int) node0.getNumber("y");
