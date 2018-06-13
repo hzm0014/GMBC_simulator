@@ -20,7 +20,7 @@ public class TimeVaryingGraph {
 	/**
 	 * 対象となるグラフ
 	 */
-	private Graph graph = null;
+	private Graph graph;
 
 	/**
 	 * 切断，再接続される確率
@@ -40,6 +40,13 @@ public class TimeVaryingGraph {
 	public TimeVaryingGraph(Graph graph, double varyingRate) {
 		this.graph = graph;
 		this.varyingRate = varyingRate;
+	}
+
+	/**
+	 * 初期化．切断しているエッジを復帰させる
+	 */
+	public void init() {
+		updateGraph(new ArrayDeque<Edge>(), deadingEdges);
 	}
 
 	/**

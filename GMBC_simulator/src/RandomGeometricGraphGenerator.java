@@ -1,14 +1,3 @@
-/**
- * issue
- * - set radius.
- * - set nodeNum.
- * - caluclate effected radius or nodeNum in algorirhm.
- * - generate graph baised node of point.
- */
-
-// memo: Toolkit kit new
-// kit.isConnected(); 連結しているかどうかを判断
-
 import java.util.Random;
 
 import org.graphstream.algorithm.Toolkit;
@@ -104,20 +93,14 @@ public class RandomGeometricGraphGenerator {
 	 * @param arg グラフ名
 	 * @return 生成したグラフ
 	 */
-	Graph generate(String arg, int limit) {
-		int generateCnt = 0;
+	Graph generate(String arg) {
 		// グラフを生成
 		do {
-			if(generateCnt > limit) {
-				System.out.println("could not connect in times");
-				break;
-			}
 			graph = new SingleGraph("RGG: " + arg);
 			for(int i = 0; i < nodeNum; i++) {
 				// ノードを追加
 				addNode("n" + i + "");
 			}
-			generateCnt++;
 		// 連結していなければ再生成
 		}while(!Toolkit.isConnected(graph));
 

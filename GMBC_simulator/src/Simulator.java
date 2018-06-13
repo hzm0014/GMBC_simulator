@@ -9,12 +9,12 @@ public class Simulator {
 	/**
 	 * グラフのノード数
 	 */
-	private final static int NODE_NUM = 1000;
+	//private final static int NODE_NUM = 1000;
 
 	/**
 	 * ノードが接続する半径距離（閾値）
 	 */
-	//private final static float RADIUS = 5.0f;
+	private final static float RADIUS = 5.0f;
 
 	/**
 	 * グラフのx軸方向の範囲
@@ -37,17 +37,27 @@ public class Simulator {
 	public static void main(String args[]) throws InterruptedException {
 		// グラフを生成する
 		int graphId = 0;
-		RandomGeometricGraphGenerator generator = new RandomGeometricGraphGenerator(NODE_NUM, X_RANGE, Y_RANGE);
-		Graph graph = generator.generate(graphId++ + "", 1);
+		RandomGeometricGraphGenerator generator = new RandomGeometricGraphGenerator(RADIUS, X_RANGE, Y_RANGE);
+		Graph graph = generator.generate(graphId++ + "");
 
 		// display
-	    graph.display(false);
+		graph.display(false);
 
-	    // time verying test
-	    TimeVaryingGraph tvg = new TimeVaryingGraph(graph, VARYING_RATE);
-	    for(;;) {
-	    		TimeUnit.SECONDS.sleep(1);
-	    		tvg.run();
-	    }
-    	}
+		// プロトコルの設定
+		Protocol protocol = new Protocol(graph);
+
+		// Time-Varying Graphの設定
+		TimeVaryingGraph tvg = new TimeVaryingGraph(graph, VARYING_RATE);
+
+		for(;;) {
+			protocol.init();
+			tvg.init();
+
+			TimeUnit.SECONDS.sleep(1);
+			while(!protocol.run()) {
+				TimeUnit.SECONDS.sleep(1);
+				tvg.run();
+			}
+		}
+	}
 }
