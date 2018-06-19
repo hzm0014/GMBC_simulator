@@ -33,12 +33,19 @@ public class TimeVaryingGraph {
 	private Queue<Edge> deadingEdges = new ArrayDeque<Edge>();
 
 	/**
-	 * コンストラクタ
+	 * グラフを設定する
 	 * @param graph 対象になるグラフ
+	 */
+	public void setGraph(Graph graph) {
+		this.graph = graph;
+		deadingEdges.clear();
+	}
+
+	/**
+	 * 切断，再接続される確率を設定する
 	 * @param varyingRate 切断，再接続される確率
 	 */
-	public TimeVaryingGraph(Graph graph, double varyingRate) {
-		this.graph = graph;
+	public void setVaryingRate(float varyingRate) {
 		this.varyingRate = varyingRate;
 	}
 
@@ -124,7 +131,6 @@ public class TimeVaryingGraph {
 			String source = edge.getNode0().getId();
 			String target = edge.getNode1().getId();
 			graph.addEdge(source + target, source, target);
-
 			deadingEdges.remove(edge);
 		}
 	}

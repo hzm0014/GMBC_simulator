@@ -93,7 +93,7 @@ public class RandomGeometricGraphGenerator {
 	 * @param arg グラフ名
 	 * @return 生成したグラフ
 	 */
-	Graph generate(String arg) {
+	public Graph generate(String arg) {
 		// グラフを生成
 		do {
 			graph = new SingleGraph("RGG: " + arg);
@@ -158,4 +158,5 @@ public class RandomGeometricGraphGenerator {
 		int y1 = (int) node1.getNumber("y");
 		return r * r >= ((x0 -x1) * (x0 - x1)) + ((y0 - y1) * (y0 - y1));
 	}
+
 }
