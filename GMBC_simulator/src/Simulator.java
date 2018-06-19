@@ -1,3 +1,4 @@
+import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import org.graphstream.graph.Graph;
@@ -37,7 +38,7 @@ public class Simulator {
 	/**
 	 * プロトコルでのFanout数
 	 */
-	private final static int FANOUT = 4;
+	private final static int FANOUT = 6;
 
 	// Time-Varying Graphに関する定数
 	/**
@@ -71,7 +72,7 @@ public class Simulator {
 	/**
 	 * ビュアーの表示の有無
 	 */
-	private final static boolean isView = true;
+	private final static boolean isView = false;
 
 	// シミュレータに関する変数
 	/**
@@ -82,28 +83,44 @@ public class Simulator {
 	private static int trialNum = 0;
 
 	/**
-	 * Random Geometric Graph のジェネレータ
+	 * Random Geometric Graph のジェネレータのクラス
 	 */
 	private static RandomGeometricGraphGenerator generator;
 
 	/**
-	 * メッセージ配送のプロトコル
+	 * メッセージ配送のプロトコルのクラス
 	 */
 	private static Protocol protocol;
 
+	/**
+	 * TimeVaryingGraphのクラス
+	 */
 	private static TimeVaryingGraph tvg;
-	public static void main(String args[]) throws InterruptedException {
 
+	// 出力関係
+	/**
+	 * 外部ファイルへの出力の有無
+	 */
+	private static boolean isWrite = true;
+
+	private final static String PATH = "result/result.csv";
+
+	/**
+	 * 外部ファイルに出力するWriterクラス
+	 */
+	private static ResultWriter writer;
+
+	public static void main(String args[]) throws InterruptedException, IOException {
 		// シミュレーションの設定
 		// グラフジェネレータの設定
 		graphId = 0;
 		generator = new RandomGeometricGraphGenerator(RADIUS, X_RANGE, Y_RANGE);
-
 		// プロトコルの設定
 		protocol = getProtocol(PROTOCOL_ID, FANOUT);
-
 		// Time-Varying Graphの設定
 		tvg = new TimeVaryingGraph();
+		// writer
+		if(isWrite) writer = new ResultWriter(PATH);
 
 		// プロトコルの説明などを表示
 		printExplain(protocol.getName());
@@ -112,6 +129,8 @@ public class Simulator {
 		for(float varying = VARYING_RATE_START; varying <= VARYING_RATE_FINISH; varying += VARYING_RATE_DELTA) {
 			simulate(varying);
 		}
+
+		if(isWrite) writer.close();
 	}
 
 	/**
@@ -183,8 +202,12 @@ public class Simulator {
 	 * @param protocolName プロトコル名
 	 */
 	private static void printExplain(String protocolName) {
+		if(isWrite) {
+			writer.println(protocolName);
+			writer.println("id;nodeNum,varyingRate,reachability,msgNum,hopNum");
+		}
 		System.out.println(protocolName);
-		System.out.println("id;nodeNum;varyingRate;reachability;msgNum;hopNum");
+		System.out.println("id;nodeNum,varyingRate,reachability,msgNum;hopNum");
 	}
 
 	/**
@@ -197,12 +220,10 @@ public class Simulator {
 	 * @param hop ホップ数
 	 */
 	private static void printResult(int trial, int node, float varying, float reach, int msg, int hop) {
-		System.out.println(trial + ";" +
-				node + ";" +
-				varying + ";" +
-				reach + ";" +
-				msg + ";" +
-				hop
-		);
+		String str = trial + "," + node + "," + varying + "," + reach + "," + msg + "," + hop;
+		if(isWrite) {
+			writer.println(str);
+		}
+		System.out.println(str);
 	}
 }
