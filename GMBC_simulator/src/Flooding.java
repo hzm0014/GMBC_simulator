@@ -28,12 +28,4 @@ class Flooding extends Protocol {
 
 		return sendNodes;
 	}
-
-	/**
-	 * プロトコル名を返す
-	 * @return プロトコル名
-	 */
-	public String getName() {
-		return "Flooding";
-	}
 }

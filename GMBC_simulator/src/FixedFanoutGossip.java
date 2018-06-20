@@ -48,13 +48,4 @@ public class FixedFanoutGossip extends Protocol {
 
 		return sendNodes;
 	}
-
-	/**
-	 * プロトコル名を返す
-	 * @return プロトコル名
-	 */
-	public String getName() {
-		return "FFG(" + fanout + ")";
-	}
-
 }

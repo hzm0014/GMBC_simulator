@@ -38,7 +38,7 @@ public class Simulator {
 	/**
 	 * プロトコルでのFanout数
 	 */
-	private final static int FANOUT = 6;
+	private final static int FANOUT = 3;
 
 	// Time-Varying Graphに関する定数
 	/**
@@ -72,7 +72,7 @@ public class Simulator {
 	/**
 	 * ビュアーの表示の有無
 	 */
-	private final static boolean isView = false;
+	private final static boolean isView = true;
 
 	// シミュレータに関する変数
 	/**
@@ -103,7 +103,9 @@ public class Simulator {
 	 */
 	private static boolean isWrite = true;
 
-	private final static String PATH = "result/result.csv";
+	private final static String PATH = "result/";
+
+	//private final static String FILE_NAME = "";
 
 	/**
 	 * 外部ファイルに出力するWriterクラス
@@ -120,10 +122,10 @@ public class Simulator {
 		// Time-Varying Graphの設定
 		tvg = new TimeVaryingGraph();
 		// writer
-		if(isWrite) writer = new ResultWriter(PATH);
+		if(isWrite) writer = new ResultWriter(PATH + getProtocolName() + ".csv");
 
 		// プロトコルの説明などを表示
-		printExplain(protocol.getName());
+		printExplain();
 
 		// 変化率を変化させてシミュレーションを実行
 		for(float varying = VARYING_RATE_START; varying <= VARYING_RATE_FINISH; varying += VARYING_RATE_DELTA) {
@@ -201,13 +203,26 @@ public class Simulator {
 	 * プロトコルの説明などを表示
 	 * @param protocolName プロトコル名
 	 */
-	private static void printExplain(String protocolName) {
+	private static void printExplain() {
+		String query = "id,nodeNum,varyingRate,reachability,msgNum,hopNum";
 		if(isWrite) {
-			writer.println(protocolName);
-			writer.println("id;nodeNum,varyingRate,reachability,msgNum,hopNum");
+			writer.println(getProtocolName());
+			writer.println(query);
 		}
-		System.out.println(protocolName);
-		System.out.println("id;nodeNum,varyingRate,reachability,msgNum;hopNum");
+		System.out.println(getProtocolName());
+		System.out.println(query);
+	}
+
+	/**
+	 * プロトコル名を取得
+	 * @return プロトコル名
+	 */
+	private static String getProtocolName() {
+		String name = PROTOCOL_ID;
+		if (!name.equals("Flooding")) {
+			name += "_" + FANOUT;
+		}
+		return name;
 	}
 
 	/**

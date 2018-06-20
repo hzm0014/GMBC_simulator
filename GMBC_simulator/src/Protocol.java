@@ -162,12 +162,6 @@ public abstract class Protocol {
 	}
 
 	/**
-	 * プロトコル名を返す
-	 * @return プロトコル名
-	 */
-	abstract public String getName();
-
-	/**
 	 * 到達率（全ノードのうち，どれだけのノードがメッセージを受け取ったか）を返す
 	 * @return 到達率
 	 */
