@@ -4,8 +4,14 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Queue;
 
+import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
+/**
+ * FixedFanoutGossipをシミュレートするクラス
+ * メッセージを受け取ったノードが，隣接ノードからいつくかをランダムに選択してメッセージを転送する
+ * パラメータにFanoutを持ち，隣接ノードを選択する際に選ぶノードの数を表す
+ */
 public class FixedFanoutGossip extends Protocol {
 
 	/**
@@ -13,27 +19,42 @@ public class FixedFanoutGossip extends Protocol {
 	 */
 	private int fanout;
 
+	/**
+	 * コンストラクタ
+	 * ノードがメッセージを転送する数であるFanout数を設定する
+	 * @param fanout Fanout数
+	 */
 	public FixedFanoutGossip(int fanout) {
 		this.fanout = fanout;
 	}
 
 	/**
+	 * グラフを設定する
+	 * @param graph 対象となるグラフ
+	 */
+	@Override
+	protected void setGraph(Graph graph) {
+		this.graph = graph;
+	}
+
+	/**
+	 * 転送するノードを選択する
 	 * 隣接ノードからランダムにFanout個選択する
 	 * 隣接ノードの数がFanoutより小さければ全てに送信する
 	 * @param from 送信元
 	 * @return 選択したノード
-	 * @override
 	 */
-	protected Queue<Node> choiceNode(Node from) {
+	@Override
+	protected Queue<Node> choiceNode(Message msg) {
 		// 転送するノード
 		Queue<Node> sendNodes = new ArrayDeque<Node>();
 
 		// 隣接ノードをList型へ変換してシャッフル
 		ArrayList<Node> tmpList = new ArrayList<Node>();
-		Iterator<? extends Node> neighbor = from.getNeighborNodeIterator();
+		Iterator<? extends Node> neighbor = msg.getTo().getNeighborNodeIterator();
 		while(neighbor.hasNext()) {
 			Node to = neighbor.next();
-			if (to == from) {
+			if (to == msg.getFrom()) {
 				continue;
 			}
 			tmpList.add(to);
@@ -47,5 +68,11 @@ public class FixedFanoutGossip extends Protocol {
 		}
 
 		return sendNodes;
+	}
+
+	@Override
+	protected void updateInTern() {
+		// TODO 自動生成されたメソッド・スタブ
+
 	}
 }

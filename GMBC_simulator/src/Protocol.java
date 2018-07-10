@@ -12,12 +12,12 @@ public abstract class Protocol {
 	/**
 	 * 対象となるグラフ
 	 */
-	private Graph graph;
+	protected Graph graph;
 
 	/**
 	 * メッセージ送信待ちのノード
 	 */
-	private Queue<Node> waitNodes = new ArrayDeque<Node>();
+	private Queue<Message> waitNodes = new ArrayDeque<Message>();
 
 	// 取得するデータ
 	/**
@@ -40,9 +40,7 @@ public abstract class Protocol {
 	 * グラフを設定する
 	 * @param graph 対象となるグラフ
 	 */
-	public void setGraph(Graph graph) {
-		this.graph = graph;
-	}
+	abstract protected void setGraph(Graph graph);
 
 	/**
 	 * 初期化．
@@ -64,7 +62,7 @@ public abstract class Protocol {
 		// 一つ目のノード(source)を追加
 		Node source = graph.getNode("n1");
 		sendMsg(source);
-		waitNodes.add(source);
+		waitNodes.add(new Message(null, source));
 	}
 
 	/**
@@ -77,26 +75,31 @@ public abstract class Protocol {
 		hopNum++;
 
 		// 次のstepでのsendNodes
-		Queue<Node> nextWaitNodes = new ArrayDeque<Node>();
+		Queue<Message> nextWaitNodes = new ArrayDeque<Message>();
+
+		// ターンの開始時の処理
+		updateInTern();
 
 		// 送信待ちのノードからメッセージを送信
-		Node from;
-		while((from = waitNodes.poll()) != null) {
+		Message msg;
+		while((msg = waitNodes.poll()) != null) {
+			Node receive = msg.getTo();
+
 			// 転送先を選択する
 			Queue<Node> sendNode;
-			if (from.getId().equals("n1")) {
+			if (receive.getId().equals("n1")) {
 				// ソースノードの場合
-				sendNode = firstChoiceNode(from);
+				sendNode = firstChoiceNode(msg);
 			} else {
 				// それ以外のノードの場合
-				sendNode = choiceNode(from);
+				sendNode = choiceNode(msg);
 			}
 			// 決定した転送先へ転送
 			Node to;
 			while((to = sendNode.poll()) != null) {
 				boolean isSend = sendMsg(to);
 				if(isSend) {
-					nextWaitNodes.add(to);
+					nextWaitNodes.add(new Message(receive, to));
 				}
 			}
 		}
@@ -139,7 +142,7 @@ public abstract class Protocol {
 	 * @param from 送信元
 	 * @return 選択したノード
 	 */
-	abstract protected Queue<Node> choiceNode(Node from);
+	abstract protected Queue<Node> choiceNode(Message msg);
 
 	/**
 	 * ソースノードによる転送を行うノードを選択する
@@ -147,12 +150,12 @@ public abstract class Protocol {
 	 * @param from 転送元（ソースノード）
 	 * @return 選択したノード
 	 */
-	private Queue<Node> firstChoiceNode(Node from) {
+	private Queue<Node> firstChoiceNode(Message msg) {
 		// 転送するノード
 		Queue<Node> sendNodes = new ArrayDeque<Node>();
 
 		// 転送するノードを選択する
-		Iterator<? extends Node> neighbor = from.getNeighborNodeIterator();
+		Iterator<? extends Node> neighbor = msg.getTo().getNeighborNodeIterator();
 		while(neighbor.hasNext()) {
 			Node to = neighbor.next();
 			sendNodes.add(to);
@@ -160,6 +163,11 @@ public abstract class Protocol {
 
 		return sendNodes;
 	}
+
+	/**
+	 * ターンの開始時に変更を加える
+	 */
+	abstract protected void updateInTern();
 
 	/**
 	 * 到達率（全ノードのうち，どれだけのノードがメッセージを受け取ったか）を返す

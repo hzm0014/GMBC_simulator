@@ -33,18 +33,23 @@ public class Simulator {
 	 * FFG: 1
 	 * GMBC: 2(未実装)
 	 */
-	private final static String PROTOCOL_ID = "FFG";
+	private final static String PROTOCOL_ID = "GMBC";
 
 	/**
 	 * プロトコルでのFanout数
 	 */
-	private final static int FANOUT = 3;
+	private final static int FANOUT = 2;
+
+	/**
+	 * MBCの更新頻度
+	 */
+	private final static float UPDATE_RATE = 1.0f;
 
 	// Time-Varying Graphに関する定数
 	/**
 	 * 切断，再接続される確率の開始
 	 */
-	private final static float VARYING_RATE_START = 0.0f;
+	private final static float VARYING_RATE_START = 0.5f;
 	/**
 	 * 切断，再接続される確率の開始
 	 */
@@ -72,7 +77,7 @@ public class Simulator {
 	/**
 	 * ビュアーの表示の有無
 	 */
-	private final static boolean isView = true;
+	private final static boolean isView = false;
 
 	// シミュレータに関する変数
 	/**
@@ -103,9 +108,10 @@ public class Simulator {
 	 */
 	private static boolean isWrite = true;
 
+	/**
+	 * 出力先のパス
+	 */
 	private final static String PATH = "result/";
-
-	//private final static String FILE_NAME = "";
 
 	/**
 	 * 外部ファイルに出力するWriterクラス
@@ -118,7 +124,7 @@ public class Simulator {
 		graphId = 0;
 		generator = new RandomGeometricGraphGenerator(RADIUS, X_RANGE, Y_RANGE);
 		// プロトコルの設定
-		protocol = getProtocol(PROTOCOL_ID, FANOUT);
+		protocol = getProtocol(PROTOCOL_ID, FANOUT, UPDATE_RATE);
 		// Time-Varying Graphの設定
 		tvg = new TimeVaryingGraph();
 		// writer
@@ -157,8 +163,8 @@ public class Simulator {
 				trialNum++;
 
 				// 各種初期化
-				protocol.init();
 				tvg.init();
+				protocol.init();
 
 				// display開始
 				if (isView) viewer = graph.display(false);
@@ -186,12 +192,14 @@ public class Simulator {
 	 * @param fanout fanout数
 	 * @return プロトコル
 	 */
-	private static Protocol getProtocol(String id, int fanout) {
+	private static Protocol getProtocol(String id, int fanout, float updateRate) {
 		Protocol protocol;
 		if (id.equals("Flooding") || id.equals("0")) {
 			protocol = new Flooding();
 		} else if (id.equals("FFG") || id.equals("1")) {
 			protocol = new FixedFanoutGossip(fanout);
+		} else if (id.equals("GMBC") || id.equals("2")) {
+			protocol = new GossipForMBC(fanout, updateRate);
 		} else {
 			System.out.println("未実装のプロトコル名");
 			protocol = null;
