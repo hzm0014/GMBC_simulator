@@ -127,7 +127,14 @@ public class GossipForMBC extends Protocol {
 			if (rnd.nextDouble() <= updateRate) {
 				Node node = nodes.next();
 				node.setAttribute("MBC", mbcGenerator.generate(node));
+				// メッセージ数を増加
+				msgNum += node.getEdgeSet().size();
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "GMBG_" + fanout;
 	}
 }

@@ -29,7 +29,7 @@ public abstract class Protocol {
 	/**
 	 * メッセージ数のカウント
 	 */
-	private int msgNum;
+	protected int msgNum;
 
 	/**
 	 * ホップ数のカウント
@@ -192,4 +192,6 @@ public abstract class Protocol {
 	public int getHopNum() {
 		return hopNum;
 	}
+
+	public abstract String toString();
 }

@@ -47,4 +47,9 @@ class Flooding extends Protocol {
 		// TODO 自動生成されたメソッド・スタブ
 
 	}
+
+	@Override
+	public String toString() {
+		return "Flooding";
+	}
 }
