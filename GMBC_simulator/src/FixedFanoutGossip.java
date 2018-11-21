@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.Queue;
 
-import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
 /**
@@ -26,15 +25,6 @@ public class FixedFanoutGossip extends Protocol {
 	 */
 	public FixedFanoutGossip(int fanout) {
 		this.fanout = fanout;
-	}
-
-	/**
-	 * グラフを設定する
-	 * @param graph 対象となるグラフ
-	 */
-	@Override
-	protected void setGraph(Graph graph) {
-		this.graph = graph;
 	}
 
 	/**

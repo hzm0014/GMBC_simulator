@@ -33,6 +33,17 @@ public class GossipForMBC extends Protocol {
 	 */
 	private float updateRate;
 
+	public void init() {
+		super.init();
+		// MBCを更新
+		Iterator<? extends Node> nodes = graph.getNodeIterator();
+		while(nodes.hasNext()) {
+			Node node = nodes.next();
+			// MBCを更新
+			node.setAttribute("MBC", mbcGenerator.generate(node));
+		}
+	}
+
 	/**
 	 * コンストラクタ
 	 * ノードがメッセージを転送する数であるFanout数を設定する
@@ -49,8 +60,8 @@ public class GossipForMBC extends Protocol {
 	 * @param graph 対象となるグラフ
 	 */
 	@Override
-	protected void setGraph(Graph graph) {
-		this.graph = graph;
+	public void setGraph(Graph graph) {
+		super.setGraph(graph);
 		// 各ノードのMBCを生成する
 		MBCGenerator mbcGene = new MBCGenerator();
 		for (Node node : graph.getNodeSet()) {
@@ -70,6 +81,11 @@ public class GossipForMBC extends Protocol {
 	protected Queue<Node> choiceNode(Message msg) {
 		// 受信者
 		Node receive = msg.getTo();
+
+		// 更新が確実ならMBCを更新
+		if (updateRate == 1.0f) {
+			receive.setAttribute("MBC", mbcGenerator.generate(receive));
+		}
 
 		// 転送するノード
 		Queue<Node> sendNodes = new ArrayDeque<Node>();
@@ -123,9 +139,16 @@ public class GossipForMBC extends Protocol {
 	protected void updateInTern() {
 		Iterator<? extends Node> nodes = graph.getNodeIterator();
 		while(nodes.hasNext()) {
+			Node node = nodes.next();
 			// 確率でMBCを更新
 			if (rnd.nextDouble() <= updateRate) {
-				Node node = nodes.next();
+
+				// 更新が確実ならスルー（転送前に更新する）
+				if (updateRate == 1.0f) {
+					msgNum += node.getEdgeSet().size();
+					continue;
+				}
+
 				node.setAttribute("MBC", mbcGenerator.generate(node));
 				// メッセージ数を増加
 				msgNum += node.getEdgeSet().size();

@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 import org.graphstream.graph.Graph;
 import org.graphstream.ui.view.Viewer;
 
-public class SimulateVaryingVsReachability extends Simulate {
+public class SimulateUpdateMbcVsReachiability extends Simulate{
 	// グラフに関する定数
 	/**
 	 * ノードが接続する半径距離（閾値）
@@ -21,29 +21,38 @@ public class SimulateVaryingVsReachability extends Simulate {
 
 	// プロトコルに関する定数
 	/**
-	 * MBCの更新頻度
+	 * プロトコル名もしくは，以下のプロトコルのID
+	 * Flooding: 0
+	 * FFG: 1
+	 * GMBC: 2
 	 */
-	private final static float UPDATE_RATE = 1.0f;
+	private String protocolId;
+	/**
+	 * プロトコルでのFanout数
+	 */
+	private int fanout;
+	/**
+	 * プロトコル名
+	 */
+	private String protocolName = "";
+	/**
+	 * MBCの更新される確率の開始
+	 */
+	private final static float UPDATE_RATE_START = 0.0f;
+	/**
+	 * MBCの更新される確率の終了
+	 */
+	private final static float UPDATE_RATE_FINISH = 1.0f;
+	/**
+	 * MBCの更新される確率の刻み
+	 */
+	private final static float UPDATE_RATE_DELTA = 0.2f;
 
 	// Time-Varying Graphに関する定数
 	/**
-	 * 切断，再接続される確率の開始
+	 * 切断，再接続される確率
 	 */
-	private final static float VARYING_RATE_START = 0.0f;
-	/**
-	 * 切断，再接続される確率の終了
-	 */
-	private final static float VARYING_RATE_FINISH = 1.0f;
-	/**
-	 * 切断，再接続される確率の刻み
-	 */
-	private final static float VARYING_RATE_DELTA = 0.1f;
-
-	/**
-	 * 固定数による切断，再接続のパラメータ
-	 */
-	int varyingFixNum = 8;
-	int[] varyingFixNumList = {0, 511, 1030, 1587, 2152, 2693, 3157, 3570};
+	private final static float VARYING_RATE = 0.4f;
 
 	// シミュレーションに関する定数
 	/**
@@ -51,7 +60,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * 何度グラフを初期化して試行するか
 	 * TRIALS * GRAPH_TRIALS が試行回数になる
 	 */
-	private final static int TRIALS = 50;
+	private final static int TRIALS = 10;
 
 	/**
 	 * グラフに対する試行回数
@@ -60,9 +69,11 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 */
 	private final static int GRAPH_TRIALS = 10;
 
-	public SimulateVaryingVsReachability(String protocolId, int fanout) {
+	public SimulateUpdateMbcVsReachiability(String protocolId, int fanout) {
 		// プロトコルの設定
-		protocol = getProtocol(protocolId, fanout, UPDATE_RATE);
+		this.protocolId = protocolId;
+		this.fanout = fanout;
+		protocolName = getProtocol(protocolId, fanout, 1.0f).toString();
 	}
 
 	public void run() throws IOException, InterruptedException {
@@ -71,21 +82,16 @@ public class SimulateVaryingVsReachability extends Simulate {
 		generator = new RandomGeometricGraphGenerator(RADIUS, X_RANGE, Y_RANGE);
 		// Time-Varying Graphの設定
 		tvg = new TimeVaryingGraph();
+		tvg.setVaryingRate(VARYING_RATE);
 		// writer
-		if(isWrite) writer = new ResultWriter(PATH + protocol.toString() + ".csv");
+		if(isWrite) writer = new ResultWriter(PATH + protocolName + "_uodateMBC" + ".csv");
 
 		// プロトコルの説明などを表示
 		printExplain();
 
 		// 変化率を変化させてシミュレーションを実行
-		/**
-		for(float varying = VARYING_RATE_START; varying <= VARYING_RATE_FINISH; varying += VARYING_RATE_DELTA) {
-			simulate(varying);
-		}
-		**/
-
-		for (int i = 0; i < varyingFixNum; i++) {
-			simulate(varyingFixNumList[i]);
+		for(float update = UPDATE_RATE_START; update <= UPDATE_RATE_FINISH; update += UPDATE_RATE_DELTA) {
+			simulate(update);
 		}
 
 		if(isWrite) writer.close();
@@ -96,9 +102,9 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param varying
 	 * @throws InterruptedException
 	 */
-	private void simulate(int varyingFixNum) throws InterruptedException {
-		// 変化率の設定
-		tvg.setVaryingFixNum(varyingFixNum);
+	private void simulate(float updateRate) throws InterruptedException {
+		// プロトコルの設定
+		protocol = getProtocol(protocolId, fanout, updateRate);
 
 		Viewer viewer;
 		// グラフを初期化する試行のループ
@@ -130,7 +136,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 				if (isView) viewer.close();
 
 				// 結果の出力
-				printResult(trialNum, graph.getNodeCount(), varyingFixNum, protocol.getReachability(),
+				printResult(trialNum, graph.getNodeCount(), VARYING_RATE, updateRate, protocol.getReachability(),
 						protocol.getMsgNum(), protocol.getHopNum());
 			}
 		}
@@ -141,12 +147,12 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param protocolName プロトコル名
 	 */
 	private void printExplain() {
-		String query = "id,nodeNum,varyingFixNum,reachability,msgNum,hopNum";
+		String query = "id,nodeNum,varyingRate,updateRate, reachability,msgNum,hopNum";
 		if(isWrite) {
-			writer.println(protocol.toString());
+			writer.println(protocolName);
 			writer.println(query);
 		}
-		System.out.println(protocol.toString());
+		System.out.println(protocolName);
 		System.out.println(query);
 	}
 
@@ -159,8 +165,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param msg メッセージ数
 	 * @param hop ホップ数
 	 */
-	private void printResult(int trial, int node, float varying, float reach, int msg, int hop) {
-		String str = trial + "," + node + "," + varying + "," + reach + "," + msg + "," + hop;
+	private void printResult(int trial, int node, float varying, float update, float reach, int msg, int hop) {
+		String str = trial + "," + node + "," + varying + "," + update + "," + reach + "," + msg + "," + hop;
 		if(isWrite) {
 			writer.println(str);
 		}

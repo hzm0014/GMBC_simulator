@@ -2,7 +2,6 @@ import java.util.ArrayDeque;
 import java.util.Iterator;
 import java.util.Queue;
 
-import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 
 /**
@@ -10,14 +9,6 @@ import org.graphstream.graph.Node;
  * メッセージを受け取ったノードが，全ての隣接ノードへメッセージを転送する
  */
 class Flooding extends Protocol {
-
-	/**
-	 * グラフを設定する
-	 * @param graph 対象となるグラフ
-	 */
-	protected void setGraph(Graph graph) {
-		this.graph = graph;
-	}
 
 	/**
 	 * 転送するノードを選択する．

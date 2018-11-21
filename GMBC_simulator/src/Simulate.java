@@ -5,7 +5,7 @@ public abstract class Simulate {
 	/**
 	 * ビュアーの表示の有無
 	 */
-	protected final static boolean isView = false;
+	protected final static boolean isView = true;
 	/**
 	 * グラフのID
 	 */
@@ -26,6 +26,13 @@ public abstract class Simulate {
 	 * TimeVaryingGraphのクラス
 	 */
 	protected TimeVaryingGraph tvg;
+
+	/**
+	 * エリアの分割数
+	 * 偏りのある切断で利用
+	 */
+	protected int SEPARATE_X = 3;
+	protected int SEPARATE_Y = 3;
 
 	// 出力に関する定数と変数
 	/**
@@ -63,7 +70,7 @@ public abstract class Simulate {
 		} else if (id.equals("GMBC") || id.equals("2")) {
 			protocol = new GossipForMBC(fanout, updateRate);
 		} else {
-			System.out.println("未実装のプロトコル名");
+			System.out.println("未実装のプロトコル");
 			protocol = null;
 		}
 		return protocol;

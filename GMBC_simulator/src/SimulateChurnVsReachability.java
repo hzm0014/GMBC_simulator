@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 import org.graphstream.graph.Graph;
 import org.graphstream.ui.view.Viewer;
 
-public class SimulateVaryingVsReachability extends Simulate {
+public class SimulateChurnVsReachability extends Simulate {
 	// グラフに関する定数
 	/**
 	 * ノードが接続する半径距離（閾値）
@@ -24,26 +24,23 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * MBCの更新頻度
 	 */
 	private final static float UPDATE_RATE = 1.0f;
-
-	// Time-Varying Graphに関する定数
+	// Churn Graphに関する定数
+	/**
+	 * CuhrnGraph
+	 */
+	private ChurnGraph cg;
 	/**
 	 * 切断，再接続される確率の開始
 	 */
-	private final static float VARYING_RATE_START = 0.0f;
+	private final static float CHURN_RATE_START = 0.7f;
 	/**
 	 * 切断，再接続される確率の終了
 	 */
-	private final static float VARYING_RATE_FINISH = 1.0f;
+	private final static float CHURN_RATE_FINISH = 0.75f;
 	/**
 	 * 切断，再接続される確率の刻み
 	 */
-	private final static float VARYING_RATE_DELTA = 0.1f;
-
-	/**
-	 * 固定数による切断，再接続のパラメータ
-	 */
-	int varyingFixNum = 8;
-	int[] varyingFixNumList = {0, 511, 1030, 1587, 2152, 2693, 3157, 3570};
+	private final static float CHURN_RATE_DELTA = 0.1f;
 
 	// シミュレーションに関する定数
 	/**
@@ -51,16 +48,16 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * 何度グラフを初期化して試行するか
 	 * TRIALS * GRAPH_TRIALS が試行回数になる
 	 */
-	private final static int TRIALS = 50;
+	private final static int TRIALS = 10;
 
 	/**
 	 * グラフに対する試行回数
 	 * 1つのグラフに対して何度試行するか
 	 * TRIALS * GRAPH_TRIALS が試行回数になる
 	 */
-	private final static int GRAPH_TRIALS = 10;
+	private final static int GRAPH_TRIALS = 50;
 
-	public SimulateVaryingVsReachability(String protocolId, int fanout) {
+	public SimulateChurnVsReachability(String protocolId, int fanout) {
 		// プロトコルの設定
 		protocol = getProtocol(protocolId, fanout, UPDATE_RATE);
 	}
@@ -69,8 +66,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 		// シミュレーションの設定
 		// グラフジェネレータの設定
 		generator = new RandomGeometricGraphGenerator(RADIUS, X_RANGE, Y_RANGE);
-		// Time-Varying Graphの設定
-		tvg = new TimeVaryingGraph();
+		// churn Graphの設定
+		cg = new ChurnGraph();
 		// writer
 		if(isWrite) writer = new ResultWriter(PATH + protocol.toString() + ".csv");
 
@@ -78,14 +75,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 		printExplain();
 
 		// 変化率を変化させてシミュレーションを実行
-		/**
-		for(float varying = VARYING_RATE_START; varying <= VARYING_RATE_FINISH; varying += VARYING_RATE_DELTA) {
-			simulate(varying);
-		}
-		**/
-
-		for (int i = 0; i < varyingFixNum; i++) {
-			simulate(varyingFixNumList[i]);
+		for(float churn = CHURN_RATE_START; churn <= CHURN_RATE_FINISH; churn += CHURN_RATE_DELTA) {
+			simulate(churn);
 		}
 
 		if(isWrite) writer.close();
@@ -96,9 +87,9 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param varying
 	 * @throws InterruptedException
 	 */
-	private void simulate(int varyingFixNum) throws InterruptedException {
+	private void simulate(float churnRate) throws InterruptedException {
 		// 変化率の設定
-		tvg.setVaryingFixNum(varyingFixNum);
+		cg.setChurnRate(churnRate);
 
 		Viewer viewer;
 		// グラフを初期化する試行のループ
@@ -106,23 +97,24 @@ public class SimulateVaryingVsReachability extends Simulate {
 			// グラフを更新
 			Graph graph = generator.generate(graphId++ + "");
 			protocol.setGraph(graph);
-			tvg.setGraph(graph);
+			cg.setGraph(graph);
 
 			// 同じグラフでの試行のループ
 			for(int j = 0; j < GRAPH_TRIALS; j++) {
 				trialNum++;
 
 				// 各種初期化
-				tvg.init();
+				cg.init();
 				protocol.init();
 
 				// display開始
 				if (isView) viewer = graph.display(false);
 
 				// シミュレーション実行
+				int chengeEdgeNum = 0;
 				do {
 					if (isView) TimeUnit.SECONDS.sleep(1);
-					tvg.run();
+					chengeEdgeNum += cg.run();
 				} while(!protocol.run());
 				if (isView) TimeUnit.SECONDS.sleep(1);
 
@@ -130,18 +122,19 @@ public class SimulateVaryingVsReachability extends Simulate {
 				if (isView) viewer.close();
 
 				// 結果の出力
-				printResult(trialNum, graph.getNodeCount(), varyingFixNum, protocol.getReachability(),
-						protocol.getMsgNum(), protocol.getHopNum());
+				printResult(trialNum, cg.getNodeNum(), churnRate, protocol.getReachability(),
+						protocol.getMsgNum(), protocol.getHopNum(), chengeEdgeNum);
 			}
 		}
 	}
+
 
 	/**
 	 * プロトコルの説明などを表示
 	 * @param protocolName プロトコル名
 	 */
 	private void printExplain() {
-		String query = "id,nodeNum,varyingFixNum,reachability,msgNum,hopNum";
+		String query = "id,nodeNum,ChurnRate,reachability,msgNum,hopNum,aveChangeEdgeNum";
 		if(isWrite) {
 			writer.println(protocol.toString());
 			writer.println(query);
@@ -154,16 +147,17 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * 結果の表示
 	 * @param trial 試行回数（何度目か）
 	 * @param node ノード数
-	 * @param varying グラフのエッジの変化率
+	 * @param churn グラフのエッジの変化率
 	 * @param reach メッセージが到達した割合
 	 * @param msg メッセージ数
 	 * @param hop ホップ数
 	 */
-	private void printResult(int trial, int node, float varying, float reach, int msg, int hop) {
-		String str = trial + "," + node + "," + varying + "," + reach + "," + msg + "," + hop;
+	private void printResult(int trial, int node, float churn, float reach, int msg, int hop, int ChangeEdgeNum) {
+		String str = trial + "," + node + "," + churn + "," + reach + "," + msg + "," + hop + "," + (int)(ChangeEdgeNum/hop);
 		if(isWrite) {
 			writer.println(str);
 		}
 		System.out.println(str);
 	}
+
 }

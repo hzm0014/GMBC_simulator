@@ -4,7 +4,7 @@ import java.util.concurrent.TimeUnit;
 import org.graphstream.graph.Graph;
 import org.graphstream.ui.view.Viewer;
 
-public class SimulateVaryingVsReachability extends Simulate {
+public class SimulateBiasedVaryingVsReachability extends Simulate {
 	// グラフに関する定数
 	/**
 	 * ノードが接続する半径距離（閾値）
@@ -26,24 +26,20 @@ public class SimulateVaryingVsReachability extends Simulate {
 	private final static float UPDATE_RATE = 1.0f;
 
 	// Time-Varying Graphに関する定数
+	private final static float VARYING_RATE = 0.2f;
+
 	/**
 	 * 切断，再接続される確率の開始
 	 */
-	private final static float VARYING_RATE_START = 0.0f;
+	private final static float BIAS_VARYING_START = 0.0f;
 	/**
 	 * 切断，再接続される確率の終了
 	 */
-	private final static float VARYING_RATE_FINISH = 1.0f;
+	private final static float BIAS_VARYING_FINISH = 1.0f;
 	/**
 	 * 切断，再接続される確率の刻み
 	 */
-	private final static float VARYING_RATE_DELTA = 0.1f;
-
-	/**
-	 * 固定数による切断，再接続のパラメータ
-	 */
-	int varyingFixNum = 8;
-	int[] varyingFixNumList = {0, 511, 1030, 1587, 2152, 2693, 3157, 3570};
+	private final static float BIAS_VARYING_DELTA = 0.2f;
 
 	// シミュレーションに関する定数
 	/**
@@ -51,7 +47,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * 何度グラフを初期化して試行するか
 	 * TRIALS * GRAPH_TRIALS が試行回数になる
 	 */
-	private final static int TRIALS = 50;
+	private final static int TRIALS = 10;
 
 	/**
 	 * グラフに対する試行回数
@@ -60,7 +56,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 */
 	private final static int GRAPH_TRIALS = 10;
 
-	public SimulateVaryingVsReachability(String protocolId, int fanout) {
+	public SimulateBiasedVaryingVsReachability(String protocolId, int fanout) {
 		// プロトコルの設定
 		protocol = getProtocol(protocolId, fanout, UPDATE_RATE);
 	}
@@ -78,14 +74,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 		printExplain();
 
 		// 変化率を変化させてシミュレーションを実行
-		/**
-		for(float varying = VARYING_RATE_START; varying <= VARYING_RATE_FINISH; varying += VARYING_RATE_DELTA) {
+		for(float varying = BIAS_VARYING_START; varying <= BIAS_VARYING_FINISH; varying += BIAS_VARYING_DELTA) {
 			simulate(varying);
-		}
-		**/
-
-		for (int i = 0; i < varyingFixNum; i++) {
-			simulate(varyingFixNumList[i]);
 		}
 
 		if(isWrite) writer.close();
@@ -96,9 +86,9 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param varying
 	 * @throws InterruptedException
 	 */
-	private void simulate(int varyingFixNum) throws InterruptedException {
+	private void simulate(float bias) throws InterruptedException {
 		// 変化率の設定
-		tvg.setVaryingFixNum(varyingFixNum);
+		tvg.setVaryingRate(VARYING_RATE);
 
 		Viewer viewer;
 		// グラフを初期化する試行のループ
@@ -106,7 +96,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 			// グラフを更新
 			Graph graph = generator.generate(graphId++ + "");
 			protocol.setGraph(graph);
-			tvg.setGraph(graph);
+			tvg.setGraph(graph, X_RANGE, Y_RANGE, SEPARATE_X, SEPARATE_Y);
+			tvg.setBias(bias);
 
 			// 同じグラフでの試行のループ
 			for(int j = 0; j < GRAPH_TRIALS; j++) {
@@ -130,7 +121,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 				if (isView) viewer.close();
 
 				// 結果の出力
-				printResult(trialNum, graph.getNodeCount(), varyingFixNum, protocol.getReachability(),
+				printResult(trialNum, graph.getNodeCount(), VARYING_RATE, bias, protocol.getReachability(),
 						protocol.getMsgNum(), protocol.getHopNum());
 			}
 		}
@@ -141,7 +132,7 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param protocolName プロトコル名
 	 */
 	private void printExplain() {
-		String query = "id,nodeNum,varyingFixNum,reachability,msgNum,hopNum";
+		String query = "id,nodeNum,varyingRate,bias,reachability,msgNum,hopNum";
 		if(isWrite) {
 			writer.println(protocol.toString());
 			writer.println(query);
@@ -159,8 +150,8 @@ public class SimulateVaryingVsReachability extends Simulate {
 	 * @param msg メッセージ数
 	 * @param hop ホップ数
 	 */
-	private void printResult(int trial, int node, float varying, float reach, int msg, int hop) {
-		String str = trial + "," + node + "," + varying + "," + reach + "," + msg + "," + hop;
+	private void printResult(int trial, int node, float varying, float bias, float reach, int msg, int hop) {
+		String str = trial + "," + node + "," + varying + "," + bias + "," + reach + "," + msg + "," + hop;
 		if(isWrite) {
 			writer.println(str);
 		}

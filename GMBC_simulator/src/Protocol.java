@@ -27,6 +27,12 @@ public abstract class Protocol {
 	private int receivedNodeNum;
 
 	/**
+	 * ノード数
+	 * 到達率を求めるために保持
+	 */
+	private int nodeNum;
+
+	/**
 	 * メッセージ数のカウント
 	 */
 	protected int msgNum;
@@ -40,7 +46,10 @@ public abstract class Protocol {
 	 * グラフを設定する
 	 * @param graph 対象となるグラフ
 	 */
-	abstract protected void setGraph(Graph graph);
+	public void setGraph(Graph graph) {
+		this.graph = graph;
+		nodeNum = graph.getNodeCount();
+	}
 
 	/**
 	 * 初期化．
@@ -174,7 +183,7 @@ public abstract class Protocol {
 	 * @return 到達率
 	 */
 	public float getReachability() {
-		return (float)receivedNodeNum / (float)graph.getNodeCount();
+		return (float)receivedNodeNum / (float)nodeNum;
 	}
 
 	/**
