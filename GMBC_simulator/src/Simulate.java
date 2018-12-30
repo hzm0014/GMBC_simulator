@@ -5,7 +5,7 @@ public abstract class Simulate {
 	/**
 	 * ビュアーの表示の有無
 	 */
-	protected final static boolean isView = true;
+	protected final static boolean isView = false;
 	/**
 	 * グラフのID
 	 */

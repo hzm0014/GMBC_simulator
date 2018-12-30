@@ -42,8 +42,9 @@ public class SimulateVaryingVsReachability extends Simulate {
 	/**
 	 * 固定数による切断，再接続のパラメータ
 	 */
-	int varyingFixNum = 8;
-	int[] varyingFixNumList = {0, 511, 1030, 1587, 2152, 2693, 3157, 3570};
+	int varyingFixNum = 7;
+//	int[] varyingFixNumList = {0, 511, 1030, 1587, 2152, 2693, 3157, 3570};
+	int[] varyingFixNumList = {3600, 3700, 3800, 3900, 4000, 4100, 4200};
 
 	// シミュレーションに関する定数
 	/**

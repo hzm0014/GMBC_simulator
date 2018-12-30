@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.ui.view.Viewer;
 
@@ -32,11 +33,11 @@ public class SimulateChurnVsReachability extends Simulate {
 	/**
 	 * 切断，再接続される確率の開始
 	 */
-	private final static float CHURN_RATE_START = 0.7f;
+	private final static float CHURN_RATE_START = 0.8f;
 	/**
 	 * 切断，再接続される確率の終了
 	 */
-	private final static float CHURN_RATE_FINISH = 0.75f;
+	private final static float CHURN_RATE_FINISH = 1.05f;
 	/**
 	 * 切断，再接続される確率の刻み
 	 */
@@ -107,6 +108,11 @@ public class SimulateChurnVsReachability extends Simulate {
 				cg.init();
 				protocol.init();
 
+				int cnt = 0;
+				for(Edge edge : graph.getEachEdge()) {
+					cnt++;
+				}
+
 				// display開始
 				if (isView) viewer = graph.display(false);
 
@@ -123,7 +129,7 @@ public class SimulateChurnVsReachability extends Simulate {
 
 				// 結果の出力
 				printResult(trialNum, cg.getNodeNum(), churnRate, protocol.getReachability(),
-						protocol.getMsgNum(), protocol.getHopNum(), chengeEdgeNum);
+						protocol.getMsgNum(), protocol.getHopNum(), chengeEdgeNum, cnt);
 			}
 		}
 	}
@@ -134,7 +140,7 @@ public class SimulateChurnVsReachability extends Simulate {
 	 * @param protocolName プロトコル名
 	 */
 	private void printExplain() {
-		String query = "id,nodeNum,ChurnRate,reachability,msgNum,hopNum,aveChangeEdgeNum";
+		String query = "id,nodeNum,ChurnRate,reachability,msgNum,hopNum,aveChangeEdgeNum,edgeNum";
 		if(isWrite) {
 			writer.println(protocol.toString());
 			writer.println(query);
@@ -152,8 +158,8 @@ public class SimulateChurnVsReachability extends Simulate {
 	 * @param msg メッセージ数
 	 * @param hop ホップ数
 	 */
-	private void printResult(int trial, int node, float churn, float reach, int msg, int hop, int ChangeEdgeNum) {
-		String str = trial + "," + node + "," + churn + "," + reach + "," + msg + "," + hop + "," + (int)(ChangeEdgeNum/hop);
+	private void printResult(int trial, int node, float churn, float reach, int msg, int hop, int ChangeEdgeNum, int edgeNum) {
+		String str = trial + "," + node + "," + churn + "," + reach + "," + msg + "," + hop + "," + (int)(ChangeEdgeNum/hop) + "," + edgeNum;
 		if(isWrite) {
 			writer.println(str);
 		}
