@@ -33,7 +33,7 @@ public class SimulateChurnVsReachability extends Simulate {
 	/**
 	 * 切断，再接続される確率の開始
 	 */
-	private final static float CHURN_RATE_START = 0.8f;
+	private final static float CHURN_RATE_START = 0.0f;
 	/**
 	 * 切断，再接続される確率の終了
 	 */

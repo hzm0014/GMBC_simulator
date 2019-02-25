@@ -27,18 +27,18 @@ public class Simulator {
 		*/
 
 		// グラフの変化率(varying)と到達率のシミュレーション
+		/*
 		for(int i = 0; i < PROTOCOL_NUM; i++) {
 			Simulate simu = new SimulateVaryingVsReachability(PROTOCOL_ID[i], FANOUT[i]);
 			simu.run();
 		}
+		*/
 
-		/*
 		// グラフの変化率(churn)と到達率のシミュレーション
 		for(int i = 0; i < PROTOCOL_NUM; i++) {
 			Simulate simu = new SimulateChurnVsReachability(PROTOCOL_ID[i], FANOUT[i]);
 			simu.run();
 		}
-		*/
 
 		// MBCの更新頻度と到達率のシミュレーション
 		/*

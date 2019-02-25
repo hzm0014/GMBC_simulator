@@ -101,6 +101,20 @@ public class RandomGeometricGraphGenerator {
 				// ノードを追加
 				addNode("n" + i + "");
 			}
+
+			// ノードの平均次数を調べる
+			/*
+			int count = 0;
+			int nodeNum = 0;
+			for (Node n : graph.getEachNode()) {
+				for (Edge e : n.getEachEdge()) {
+					count++;
+				}
+				nodeNum++;
+			}
+			System.out.println("node edges: " + count + ", " + nodeNum + ", " + (count / nodeNum));
+			*/
+
 		// 連結していなければ再生成
 		}while(!Toolkit.isConnected(graph));
 
